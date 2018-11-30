@@ -132,7 +132,10 @@
     // The header is always one line, the body is multiple lines.
     // The width of the table is 320 - 20px of left & right padding. We don't want to let the body
     // text go past 200px.
-    CGRect body = [[message text] boundingRectWithSize:CGSizeMake(300.f, 200.0f) options:NSStringDrawingUsesLineFragmentOrigin|NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName:[UIFont boldSystemFontOfSize:14] } context:nil];
+    CGRect body = [[message text] boundingRectWithSize:CGSizeMake(300.f, 200.0f)
+                                               options:NSStringDrawingUsesLineFragmentOrigin|NSStringDrawingUsesFontLeading
+                                            attributes:@{NSFontAttributeName:[UIFont boldSystemFontOfSize:14]}
+                                               context:nil];
 
     return body.size.height + 20.f; // 20px padding.
 }
@@ -183,22 +186,14 @@
 {
     messages = [NSMutableArray array];
 
-    self.navigationItem.rightBarButtonItem =
-    [[UIBarButtonItem alloc] initWithTitle:@"Users"
-                                      style:UIBarButtonItemStylePlain
-                                     target:self action:@selector(users:)];
-
-    self.navigationItem.leftBarButtonItem =
-    [[UIBarButtonItem alloc] initWithTitle:@"Logout"
-                                      style:UIBarButtonItemStylePlain
-                                     target:self action:@selector(logout:)];
-
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(enterBackground)
                                                  name:UIApplicationDidEnterBackgroundNotification
                                                object:nil];
 
-    userController = [[UserController alloc] initWithNibName:@"UserView" bundle:nil];
+    UIStoryboard *mainStoryboard = [UIStoryboard storyboardWithName:@"Main"
+                                                             bundle: nil];
+    userController = (UserController *)[mainStoryboard instantiateViewControllerWithIdentifier:@"UserController"];
 }
 
 #pragma mark SessionManagement
@@ -251,11 +246,11 @@
 }
 
 // Called by the thread other than main.
--(void)  setup:(id<ICECommunicator>)c
-       session:(id<ChatChatSessionPrx>)s
-    acmTimeout:(ICEInt)t
-        router:(id<GLACIER2RouterPrx>)r
-      category:(NSString*)category
+-(void) setup:(id<ICECommunicator>)c
+      session:(id<ChatChatSessionPrx>)s
+   acmTimeout:(ICEInt)t
+       router:(id<GLACIER2RouterPrx>)r
+     category:(NSString*)category
 {
     self.communicator = c;
     self.session = s;
@@ -299,10 +294,8 @@
 }
 
 // Called when the chat controller becomes active.
--(void)activate:(NSString*)t
+-(void)activate
 {
-    self.title = t;
-
     [messages removeAllObjects];
     [chatView reloadData];
 
@@ -316,7 +309,8 @@
     [session begin_setCallback:callbackProxy response:nil exception:^(ICEException* ex) { [self exception:ex]; }];
 }
 
--(void)logout:(id)sender
+
+-(IBAction)logout:(id)sender
 {
     [self destroySession];
     [self.navigationController popViewControllerAnimated:YES];
@@ -372,7 +366,7 @@
                     atScrollPosition:UITableViewScrollPositionBottom animated:NO];
 }
 
--(void)users:(id)sender
+-(IBAction)users:(id)sender
 {
     [self.navigationController pushViewController:userController animated:YES];
 }
