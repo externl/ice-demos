@@ -56,13 +56,13 @@ static NSString* passwordKey = @"passwordKey";
 
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
 
-    // Set the default values, and show the clear button in the text field.
-    usernameField.clearButtonMode = UITextFieldViewModeWhileEditing;
+    // Set the default values
     usernameField.text = [defaults stringForKey:usernameKey];
-    passwordField.clearButtonMode = UITextFieldViewModeWhileEditing;
     passwordField.text = [defaults stringForKey:passwordKey];
 
-    mainController = [[MainController alloc] initWithNibName:@"MainView" bundle:nil];
+    UIStoryboard *mainStoryboard = [UIStoryboard storyboardWithName:@"Main"
+                                                             bundle: nil];
+    mainController = (MainController *)[mainStoryboard instantiateViewControllerWithIdentifier:@"MainController"];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationWillTerminate)

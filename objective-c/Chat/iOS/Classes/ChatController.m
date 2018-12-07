@@ -74,9 +74,9 @@
 @interface MessageCell : UITableViewCell
 {
 @private
-    UILabel* timestamp;
-    UILabel* who;
-    UILabel* body;
+    IBOutlet UILabel* timestamp;
+    IBOutlet UILabel* who;
+    IBOutlet UILabel* body;
     NSDateFormatter *dateFormatter;
 
     ChatMessage* message;
@@ -84,41 +84,17 @@
 
 @property (nonatomic) ChatMessage* message;
 
-+(CGFloat)heightForMessage:(ChatMessage*)messsage;
+//+(CGFloat)heightForMessage:(ChatMessage*)messsage;
 
 @end
 
 @implementation MessageCell
 @synthesize message;
 
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
     if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])
     {
-        who = [[UILabel alloc] initWithFrame:CGRectZero];
-
-        who.textAlignment = NSTextAlignmentLeft;
-        who.textColor = [UIColor blueColor];
-        who.font = [UIFont boldSystemFontOfSize:12];
-        who.numberOfLines = 0;
-
-        timestamp = [[UILabel alloc] initWithFrame:CGRectZero];
-        timestamp.textAlignment = NSTextAlignmentRight;
-        timestamp.textColor = [UIColor blackColor];
-        timestamp.highlightedTextColor = [UIColor darkGrayColor];
-        timestamp.font = [UIFont boldSystemFontOfSize:12];
-        timestamp.numberOfLines = 0;
-
-        body = [[UILabel alloc] initWithFrame:CGRectZero];
-
-        body.textColor = [UIColor lightGrayColor];
-        body.font = [UIFont boldSystemFontOfSize:14];
-        body.numberOfLines = 0;
-
-        [self.contentView addSubview:timestamp];
-        [self.contentView addSubview:who];
-        [self.contentView addSubview:body];
-
         dateFormatter = [[NSDateFormatter alloc] init];
         [dateFormatter setDateStyle:NSDateFormatterShortStyle];
         [dateFormatter setTimeStyle:NSDateFormatterMediumStyle];
@@ -127,33 +103,16 @@
     return self;
 }
 
-+(CGFloat)heightForMessage:(ChatMessage*)message
+-(id)initWithCoder:(NSCoder *)aDecoder
 {
-    // The header is always one line, the body is multiple lines.
-    // The width of the table is 320 - 20px of left & right padding. We don't want to let the body
-    // text go past 200px.
-    CGRect body = [[message text] boundingRectWithSize:CGSizeMake(300.f, 200.0f)
-                                               options:NSStringDrawingUsesLineFragmentOrigin|NSStringDrawingUsesFontLeading
-                                            attributes:@{NSFontAttributeName:[UIFont boldSystemFontOfSize:14]}
-                                               context:nil];
+    if (self = [super initWithCoder:aDecoder])
+    {
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateStyle:NSDateFormatterShortStyle];
+        [dateFormatter setTimeStyle:NSDateFormatterMediumStyle];
+    }
 
-    return body.size.height + 20.f; // 20px padding.
-}
-
-- (void)layoutSubviews
-{
-    [super layoutSubviews];
-
-    CGRect contentRect = self.contentView.bounds;
-
-    CGRect timestampFrame = CGRectMake(160.f, 0.0f, 150.f, 20.f);
-    CGRect whoFrame = CGRectMake(10.f, 0.0f, 150.f, 20.f);
-
-    CGRect bodyFrame = CGRectMake(10.f, 20.f, CGRectGetWidth(contentRect)-20.f, CGRectGetHeight(contentRect)-20.f);
-
-    timestamp.frame = timestampFrame;
-    who.frame = whoFrame;
-    body.frame = bodyFrame;
+    return self;
 }
 
 -(void)setMessage:(ChatMessage*)m
@@ -185,15 +144,24 @@
 -(void)viewDidLoad
 {
     messages = [NSMutableArray array];
+    users = [NSMutableArray array];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(enterBackground)
                                                  name:UIApplicationDidEnterBackgroundNotification
                                                object:nil];
+}
 
-    UIStoryboard *mainStoryboard = [UIStoryboard storyboardWithName:@"Main"
-                                                             bundle: nil];
-    userController = (UserController *)[mainStoryboard instantiateViewControllerWithIdentifier:@"UserController"];
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+    if ([[segue identifier] isEqualToString:@"showUsers"])
+    {
+        // Get reference to the destination view controller
+        UserController *uc = [segue destinationViewController];
+
+        // Pass any objects to the view controller here, like...
+        uc.users = users;
+    }
 }
 
 #pragma mark SessionManagement
@@ -309,9 +277,9 @@
     [session begin_setCallback:callbackProxy response:nil exception:^(ICEException* ex) { [self exception:ex]; }];
 }
 
-
 -(IBAction)logout:(id)sender
 {
+    [self.view endEditing:YES];
     [self destroySession];
     [self.navigationController popViewControllerAnimated:YES];
 }
@@ -333,6 +301,8 @@
 
 - (void)viewWillDisappear:(BOOL)animated
 {
+    [self.view endEditing:YES];
+
     // Unregister for keyboard show/hide notifications.
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
@@ -366,11 +336,6 @@
                     atScrollPosition:UITableViewScrollPositionBottom animated:NO];
 }
 
--(IBAction)users:(id)sender
-{
-    [self.navigationController pushViewController:userController animated:YES];
-}
-
 - (void)setViewMovedUp:(BOOL)movedUp bounds:(CGRect)bounds
 {
     [UIView beginAnimations:nil context:NULL];
@@ -392,17 +357,17 @@
 
 #pragma mark Keyboard notifications
 
-- (void)keyboardWillShow:(NSNotification *)notif
+- (void)keyboardWillShow:(NSNotification *)aNotification
 {
     CGRect r;
-    [[[notif userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] getValue:&r];
+    [[[aNotification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] getValue:&r];
     [self setViewMovedUp:YES bounds:r];
 }
 
-- (void)keyboardWillHide:(NSNotification *)notif
+- (void)keyboardWillHide:(NSNotification *)aNotification
 {
     CGRect r;
-    [[[notif userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] getValue:&r];
+    [[[aNotification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] getValue:&r];
     [self setViewMovedUp:NO bounds:r];
 }
 
@@ -430,13 +395,9 @@
 
 #pragma mark ChatRoomCallbck
 
--(void)init:(NSMutableArray *)users current:(ICECurrent*)current;
+-(void)init:(NSMutableArray *)initUsers current:(ICECurrent*)current;
 {
-    userController.users = users;
-    [userController.usersTableView reloadData];
-    self.navigationItem.rightBarButtonItem.title = [NSString stringWithFormat:@"%lu %@",
-                                                    (unsigned long)userController.users.count,
-                                                    (userController.users.count > 1 ? @"users" : @"user")];
+    users = initUsers;
 }
 
 -(void)send:(ICELong)timestamp name:(NSMutableString *)name message:(NSMutableString *)message current:(ICECurrent*)current;
@@ -449,12 +410,11 @@
     NSString* s = [NSString stringWithFormat:@"%@ joined.\n", name];
     [self append:[ChatMessage chatMessageWithText:s who:@"system message" timestamp:timestamp]];
 
-    [userController.users addObject:name];
-    [userController.usersTableView reloadData];
+    [users addObject:name];
 
-    self.navigationItem.rightBarButtonItem.title = [NSString stringWithFormat:@"%lu %@",
-                                                    (unsigned long)userController.users.count,
-                                                    (userController.users.count > 1 ? @"users" : @"user")];
+    [self.navigationItem.rightBarButtonItem setTitle: [NSString stringWithFormat:@"%lu %@",
+                                                       (unsigned long)users.count,
+                                                       (users.count > 1 ? @"Users" : @"User")]];
 }
 
 -(void)leave:(ICELong)timestamp name:(NSMutableString*)name current:(ICECurrent*)current;
@@ -462,16 +422,15 @@
     NSString* s = [NSString stringWithFormat:@"%@ left.\n", name];
     [self append:[ChatMessage chatMessageWithText:s who:@"system message" timestamp:timestamp]];
 
-    NSUInteger index = [userController.users indexOfObject:name];
+    NSUInteger index = [users indexOfObject:name];
     if(index != NSNotFound)
     {
-        [userController.users removeObjectAtIndex:index];
-        [userController.usersTableView reloadData];
+        [users removeObjectAtIndex:index];
     }
 
-    self.navigationItem.rightBarButtonItem.title = [NSString stringWithFormat:@"%lu %@",
-                                                    (unsigned long)userController.users.count,
-                                                    (userController.users.count > 1 ? @"users" : @"user")];
+    [self.navigationItem.rightBarButtonItem setTitle: [NSString stringWithFormat:@"%lu %@",
+                                                       (unsigned long)users.count,
+                                                       (users.count > 1 ? @"Users" : @"User")]];
 }
 
 #pragma mark <UITableViewDelegate, UITableViewDataSource> Methods
@@ -486,24 +445,9 @@
     return messages.count;
 }
 
--(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
-{
-    return chatView.sectionHeaderHeight;
-}
-
--(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    return [MessageCell heightForMessage:[messages objectAtIndex:indexPath.row]];
-}
-
 -(UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     MessageCell *cell = (MessageCell*)[chatView dequeueReusableCellWithIdentifier:@"MessageCell"];
-    if(cell == nil)
-    {
-        // Create a new cell. CGRectZero allows the cell to determine the appropriate size.
-        cell = [[MessageCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"MessageCell"];
-    }
     cell.message = [messages objectAtIndex:indexPath.row];
     return cell;
 }

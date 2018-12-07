@@ -17,7 +17,7 @@
 @private
     IBOutlet UITableView* chatView;
     IBOutlet UITextField* inputField;
-    UserController* userController;
+    NSMutableArray* users;
     NSMutableArray* messages;
     NSTimer* refreshTimer;
 
@@ -45,5 +45,4 @@
 -(void)leave:(ICELong)timestamp name:(NSMutableString *)name current:(ICECurrent*)current;
 
 -(IBAction)logout:(id)sender;
--(IBAction)users:(id)sender;
 @end
