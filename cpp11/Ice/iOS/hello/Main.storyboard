@@ -167,12 +167,12 @@
                         <constraints>
                             <constraint firstItem="Ggq-ib-5DW" firstAttribute="bottom" secondItem="0hn-Z7-th9" secondAttribute="bottom" constant="1" id="0Ql-80-uKa"/>
                             <constraint firstItem="82g-xr-U0l" firstAttribute="centerY" secondItem="HBb-0W-zeW" secondAttribute="centerY" id="5gf-rE-GmT"/>
-                            <constraint firstItem="0hn-Z7-th9" firstAttribute="trailing" secondItem="Ggq-ib-5DW" secondAttribute="trailing" constant="20" id="9pY-at-LZy"/>
                             <constraint firstItem="0hn-Z7-th9" firstAttribute="bottom" secondItem="Dgl-qV-nls" secondAttribute="bottom" id="BoH-Lf-HCa"/>
                             <constraint firstItem="82g-xr-U0l" firstAttribute="leading" secondItem="0hn-Z7-th9" secondAttribute="leading" constant="20" id="F3i-dC-woD"/>
                             <constraint firstItem="Dgl-qV-nls" firstAttribute="leading" secondItem="0hn-Z7-th9" secondAttribute="leading" constant="20" id="GpC-44-tiB"/>
                             <constraint firstItem="Ggq-ib-5DW" firstAttribute="leading" secondItem="Dgl-qV-nls" secondAttribute="trailing" constant="8" id="YQg-h4-bcf"/>
                             <constraint firstItem="0hn-Z7-th9" firstAttribute="trailing" secondItem="82g-xr-U0l" secondAttribute="trailing" constant="20" id="nho-xw-e3E"/>
+                            <constraint firstItem="0hn-Z7-th9" firstAttribute="trailing" secondItem="Ggq-ib-5DW" secondAttribute="trailing" constant="20" id="tGo-bX-qJP"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="0hn-Z7-th9"/>
                     </view>
