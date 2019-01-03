@@ -55,13 +55,13 @@
                                         <rect key="frame" x="67.333333333333343" y="91.666666666666686" width="279.33333333333326" height="27.666666666666671"/>
                                         <subviews>
                                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="Password" lineBreakMode="tailTruncation" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="zur-si-SrF">
-                                                <rect key="frame" x="0.0" y="0.0" width="73.666666666666671" height="20.333333333333332"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="78.666666666666671" height="20.333333333333332"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <textField opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" horizontalHuggingPriority="48" horizontalCompressionResistancePriority="749" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="Bcn-Jv-shJ">
-                                                <rect key="frame" x="81.666666666666671" y="-2.3333333333333144" width="197.66666666666663" height="30"/>
+                                                <rect key="frame" x="86.666666666666671" y="-2.3333333333333144" width="192.66666666666663" height="30"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                 <textInputTraits key="textInputTraits" autocorrectionType="no" secureTextEntry="YES"/>
                                                 <connections>
@@ -96,6 +96,8 @@
                                     </button>
                                 </subviews>
                                 <constraints>
+                                    <constraint firstItem="0np-tZ-ij7" firstAttribute="height" secondItem="Bcn-Jv-shJ" secondAttribute="height" id="4fC-Nw-vwX"/>
+                                    <constraint firstItem="0np-tZ-ij7" firstAttribute="width" secondItem="Bcn-Jv-shJ" secondAttribute="width" id="FRG-l4-9uU"/>
                                     <constraint firstItem="2jy-Yg-IV2" firstAttribute="width" secondItem="1QW-wh-IoZ" secondAttribute="width" id="NXt-rf-pUR"/>
                                     <constraint firstItem="2jy-Yg-IV2" firstAttribute="width" secondItem="Zf3-gE-XLH" secondAttribute="width" id="TKh-iy-cfi"/>
                                     <constraint firstItem="Zf3-gE-XLH" firstAttribute="width" secondItem="1QW-wh-IoZ" secondAttribute="width" id="xW0-jy-39A"/>

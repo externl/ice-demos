@@ -441,7 +441,14 @@
             }
             else if(indexPath.section == 3)
             {
-                [cell.textLabel setText:book.rentedBy];
+                if([book.rentedBy length] == 0)
+                {
+                    [cell.textLabel setText:@"Not rented. Click to rent."];
+                }
+                else
+                {
+                    [cell.textLabel setText:book.rentedBy];
+                }
             }
         }
     }
@@ -587,7 +594,7 @@
 
             case 3:
             {
-                name = @"";
+                name = @"Enter Book Renter Name";
                 value = @"";
                 break;
             }

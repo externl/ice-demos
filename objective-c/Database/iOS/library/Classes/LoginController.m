@@ -113,14 +113,13 @@ static NSString* passwordKey = @"passwordKey";
 
 #pragma mark UITextFieldDelegate
 
--(BOOL)textFieldShouldBeginEditing:(UITextField*)field
+- (void)textFieldDidBeginEditing:(UITextField *)field;
 {
     self.currentField = field;
     self.oldFieldValue = field.text;
-    return YES;
 }
 
--(BOOL)textFieldShouldReturn:(UITextField*)theTextField
+- (void)textFieldDidEndEditing:(UITextField *)theTextField;
 {
     NSAssert(theTextField == currentField, @"theTextField == currentTextField");
 
@@ -141,8 +140,6 @@ static NSString* passwordKey = @"passwordKey";
 
     [theTextField resignFirstResponder];
     self.currentField = nil;
-
-    return YES;
 }
 
 #pragma mark -
