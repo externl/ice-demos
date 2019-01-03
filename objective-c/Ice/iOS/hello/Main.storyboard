@@ -187,6 +187,7 @@
                         <outlet property="shutdownButton" destination="EvV-fg-b5w" id="0Hg-aH-qj5"/>
                         <outlet property="statusLabel" destination="Ggq-ib-5DW" id="4Xg-ea-Zj4"/>
                         <outlet property="timeoutSlider" destination="PDC-Gu-DRy" id="zEl-5K-zni"/>
+                        <outlet property="useDiscovery" destination="4pV-R9-k3O" id="ZqI-vA-OuR"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="zII-Gl-VjE" userLabel="First Responder" sceneMemberID="firstResponder"/>
