@@ -17,15 +17,15 @@
     "slice2js": "^3.7.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.1.2",
-    "@babel/core": "^7.1.2",
+    "@babel/cli": "^7.29.7",
+    "@babel/core": "^7.29.7",
     "@babel/plugin-transform-async-to-generator": "^7.1.0",
     "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.1.0",
     "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-preset-es2015-script": "^1.1.0",
     "del": "^3.0.0",
-    "gulp": "^4.0.0",
+    "gulp": "^5.0.1",
     "gulp-babel": "^8.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-ext-replace": "^0.3.0",
@@ -33,10 +33,10 @@
     "gulp-ice-builder": "^2.0.3",
     "gulp-newer": "^1.4.0",
     "gulp-open": "^3.0.1",
-    "gulp-terser": "^1.1.5",
+    "gulp-terser": "^1.4.1",
     "gulp-uglifyes": "^0.2.1",
     "hogan.js": "^3.0.2",
-    "http-proxy": "^1.17.0",
+    "http-proxy": "^1.18.1",
     "pump": "^3.0.0",
     "vinyl-paths": "^2.1.0"
   }
