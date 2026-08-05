@@ -1,0 +1,172 @@
+name: MSVC CMake check
+
+# Temporary harness. Two jobs:
+#  - matrix: runs the slice2cpp_generate test matrix (tools/slice2cpp-matrix.sh) on MSVC/Ninja
+#    against the 3.8.2 NuGet package with the cpp/config files from zeroc-ice/ice#6332 overlaid.
+#  - probe/demos: re-validate the zeroc-ice/ice#6354 Windows fixes (stack tip) after recent changes.
+
+on:
+  push:
+    branches: ["claude/msvc-cmake-check"]
+
+env:
+  ICE_NUGET_VERSION: "3.8.2"
+
+jobs:
+  matrix:
+    name: slice2cpp matrix (MSVC Ninja)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: externl/ice
+          ref: claude/cmake-scripts-review-361241
+          path: ice-src
+      - name: Install Ice NuGet package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path pkg | Out-Null
+          Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile pkg/nuget.exe
+          & pkg/nuget.exe install ZeroC.Ice.Cpp -Version $env:ICE_NUGET_VERSION -OutputDirectory pkg
+          if ($LASTEXITCODE -ne 0) { throw "nuget install failed" }
+      - name: Overlay the slice2cpp files under test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dest = "pkg/ZeroC.Ice.Cpp.$env:ICE_NUGET_VERSION/cmake"
+          Copy-Item ice-src/cpp/config/slice2cpp.cmake $dest -Force
+          Copy-Item ice-src/cpp/config/slice2cpp_depend.cmake $dest -Force
+          Get-ChildItem $dest | Select-Object -ExpandProperty Name
+      - name: Export MSVC environment
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -property installationPath
+          cmd /c "`"$vsPath\VC\Auxiliary\Build\vcvarsall.bat`" x64 && set" | ForEach-Object {
+              if ($_ -match '^([^=]+)=(.*)$') { Add-Content $env:GITHUB_ENV "$($matches[1])=$($matches[2])" }
+          }
+      - name: Run the matrix
+        shell: bash
+        run: |
+          export ICE_PREFIX_DIR="$PWD/pkg/ZeroC.Ice.Cpp.$ICE_NUGET_VERSION"
+          export MATRIX_ROOT="$RUNNER_TEMP/mf"
+          ./tools/slice2cpp-matrix.sh Ninja A
+
+  probe:
+    name: stack probe (${{ matrix.build_type || 'no config' }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["", "Debug", "Release", "RelWithDebInfo", "MinSizeRel"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: externl/ice
+          ref: claude/cmake-package-windows
+          path: ice-src
+      - name: Install Ice NuGet package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $pkgDir = "cpp/cmake/packages"
+          New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
+          Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile "$pkgDir/nuget.exe"
+          & "$pkgDir/nuget.exe" install ZeroC.Ice.Cpp -Version $env:ICE_NUGET_VERSION -OutputDirectory $pkgDir
+          if ($LASTEXITCODE -ne 0) { throw "nuget install failed" }
+      - name: Overlay the CMake config files under test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dest = "cpp/cmake/packages/ZeroC.Ice.Cpp.$env:ICE_NUGET_VERSION/cmake"
+          Remove-Item "$dest/*.cmake"
+          Copy-Item ice-src/cpp/config/*.cmake $dest
+          $v = "$dest/IceVersion.cmake"
+          (Get-Content $v) -replace '3\.9\.0-alpha\.0', $env:ICE_NUGET_VERSION -replace '39a0', '38' | Set-Content $v
+      - name: Probe the imported targets
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path probe | Out-Null
+          @'
+          cmake_minimum_required(VERSION 3.21)
+          project(probe CXX)
+          include(${CMAKE_CURRENT_SOURCE_DIR}/../cpp/cmake/common.cmake)
+          message(STATUS "PROBE Ice_VERSION=${Ice_VERSION} Ice_SO_VERSION=${Ice_SO_VERSION}")
+          get_target_property(cfgs Ice::Ice IMPORTED_CONFIGURATIONS)
+          message(STATUS "PROBE IMPORTED_CONFIGURATIONS=${cfgs}")
+          file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/probe-$<CONFIG>.txt CONTENT
+          "config=$<CONFIG>
+          implib=$<TARGET_LINKER_FILE_NAME:Ice::Ice>
+          icebox=$<TARGET_FILE_NAME:Ice::icebox_EXE>
+          runtime_dlls=$<GENEX_EVAL:$<TARGET_PROPERTY:Ice::Ice,ICE_RUNTIME_DLLS>>
+          ")
+          '@ | Set-Content "probe/CMakeLists.txt"
+          $args = @("-B", "probe/build", "-S", "probe", "-G", "Ninja")
+          if ("${{ matrix.build_type }}" -ne "") { $args += "-DCMAKE_BUILD_TYPE=${{ matrix.build_type }}" }
+          cmake @args
+          if ($LASTEXITCODE -ne 0) { throw "probe configure failed" }
+          Write-Output "===== PROBE RESULT ====="
+          Get-ChildItem "probe/build/probe-*.txt" | ForEach-Object { Get-Content $_ }
+          $bad = Select-String -Path "probe/build/build.ninja" -Pattern '$<' -SimpleMatch
+          if ($bad) { throw "unevaluated generator expression reached build.ninja" }
+          Write-Output "build.ninja clean"
+
+  demos:
+    name: stack demos (${{ matrix.build_type || 'no config' }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["", "Release", "RelWithDebInfo"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: externl/ice
+          ref: claude/cmake-package-windows
+          path: ice-src
+      - name: Install Ice NuGet package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $pkgDir = "cpp/cmake/packages"
+          New-Item -ItemType Directory -Force -Path $pkgDir | Out-Null
+          Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile "$pkgDir/nuget.exe"
+          & "$pkgDir/nuget.exe" install ZeroC.Ice.Cpp -Version $env:ICE_NUGET_VERSION -OutputDirectory $pkgDir
+          if ($LASTEXITCODE -ne 0) { throw "nuget install failed" }
+      - name: Overlay the CMake config files under test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dest = "cpp/cmake/packages/ZeroC.Ice.Cpp.$env:ICE_NUGET_VERSION/cmake"
+          Remove-Item "$dest/*.cmake"
+          Copy-Item ice-src/cpp/config/*.cmake $dest
+          $v = "$dest/IceVersion.cmake"
+          (Get-Content $v) -replace '3\.9\.0-alpha\.0', $env:ICE_NUGET_VERSION -replace '39a0', '38' | Set-Content $v
+      - name: Build C++ demos
+        timeout-minutes: 40
+        working-directory: cpp
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -property installationPath
+          cmd /c "`"$vsPath\VC\Auxiliary\Build\vcvarsall.bat`" x64 && set" | ForEach-Object {
+              if ($_ -match '^([^=]+)=(.*)$') { [Environment]::SetEnvironmentVariable($matches[1], $matches[2], "Process") }
+          }
+          $failed = @()
+          Get-ChildItem -Recurse -Filter CMakeLists.txt | ForEach-Object {
+              $dir = $_.DirectoryName
+              $cargs = @("-B", "$dir/build", "-S", $dir, "-G", "Ninja")
+              if ("${{ matrix.build_type }}" -ne "") { $cargs += "-DCMAKE_BUILD_TYPE=${{ matrix.build_type }}" }
+              cmake @cargs
+              if ($LASTEXITCODE -ne 0) { $failed += "configure $dir"; return }
+              cmake --build "$dir/build"
+              if ($LASTEXITCODE -ne 0) { $failed += "build $dir" }
+          }
+          if ($failed.Count -gt 0) { $failed; throw "$($failed.Count) demo(s) failed" }
+          Write-Output "all demos built"
